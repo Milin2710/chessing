@@ -10,7 +10,7 @@ export default function SyncUser() {
 
   React.useEffect(() => {
     if (user) {
-      fetch("http://localhost:4000/sync-user", {
+      fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/sync-user`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

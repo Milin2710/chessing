@@ -38,7 +38,7 @@ export default function Games() {
   useEffect(() => {
     if (!user?.username) return;
     const response = axios.get(
-      `http://localhost:4000/all-games?username=${user.username}`
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/all-games?username=${user.username}`
     );
     response
       .then((res) => {

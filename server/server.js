@@ -13,7 +13,12 @@ const server = http.createServer(app);
 const io = new Server(server, {
   cors: { origin: "*" },
 });
-app.use(cors());
+app.use(
+  cors({
+    origin: ["http://localhost:3000", process.env.CORS_ORIGIN],
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use("/", router);
 
@@ -22,7 +27,9 @@ mongoose
   .connect(process.env.MONGODB_URI || "mongodb://localhost:27017/chessing")
   .then(() => console.log("MongoDB connected"));
 
-const pubClient = createClient();
+const pubClient = createClient({
+  url: process.env.REDIS_URL || "http://localhost:6379",
+});
 const subClient = pubClient.duplicate();
 
 let waitingPlayer = null; // Store socket.id of waiting player

@@ -27,7 +27,6 @@ export default function ChessBoard2D() {
 
   // Reference to the chessboard container DOM element
   const boardRef = useRef<HTMLDivElement | null>(null);
-  // const socket = io("http://localhost:4000");
   console.log("conn");
 
   const socket = getSocket();

@@ -41,7 +41,7 @@ export default function Home() {
   useEffect(() => {
     if (!user?.username) return;
     const response = axios.get(
-      `http://localhost:4000/get-auth-user?username=${user.username}`
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/get-auth-user?username=${user.username}`
     );
     response
       .then((res) => {
@@ -104,7 +104,7 @@ export default function Home() {
     const fetchSearchResults = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:4000/search-users?query=${debouncedQuery}`
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/search-users?query=${debouncedQuery}`
         );
         setSearchResults(response.data);
       } catch (error) {

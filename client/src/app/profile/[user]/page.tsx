@@ -39,7 +39,7 @@ export default function Profile({
   useEffect(() => {
     console.log("Fetching user data for:", user);
     const response = axios.get(
-      `http://localhost:4000/get-user?username=${user}`
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/get-user?username=${user}`
     );
     response
       .then((res) => {

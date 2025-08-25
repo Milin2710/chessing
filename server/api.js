@@ -200,4 +200,6 @@ router.get("/all-games", async (req, res) => {
   }
 });
 
+router.get("/health", (_, res) => res.send("OK"));
+
 export default router;
