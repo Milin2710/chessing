@@ -33,6 +33,7 @@ export default function ChessBoard2D() {
   const socket = getSocket();
 
   useEffect(() => {
+    if (!socket) return;
     socket.on("connect", () => {
       console.log("Connected:", socket.id);
       console.log("User data:", user);
@@ -44,6 +45,7 @@ export default function ChessBoard2D() {
     });
 
     return () => {
+      socket.emit("leave", { clerkId: user?.id, username: user?.username });
       socket.off("connect");
     };
   }, []);
@@ -115,7 +117,7 @@ export default function ChessBoard2D() {
 
   useEffect(() => {
     socket.on("result", (result: string) => {
-      console.log("Received move:", result);
+      console.log("result:", result);
       if (result === "Opponent left") {
         setPaired(false);
         setColor("white");

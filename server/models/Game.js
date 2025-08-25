@@ -1,4 +1,5 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
+import { type } from "os";
 
 const gameSchema = new mongoose.Schema({
   playerw: {
@@ -17,7 +18,15 @@ const gameSchema = new mongoose.Schema({
     type: String,
     default: "not_declared",
   },
+  playerwrating: {
+    type: Number,
+    default: 1200,
+  },
+  playerbrating: {
+    type: Number,
+    default: 1200,
+  },
   createdAt: { type: Date, default: Date.now },
 });
 
-module.exports = mongoose.models.Game || mongoose.model("Game", gameSchema);
+export default mongoose.models.Game || mongoose.model("Game", gameSchema);
