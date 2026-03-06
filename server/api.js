@@ -8,7 +8,9 @@ router.post("/sync-user", async (req, res) => {
   try {
     // console.log("Syncing user:", req.body);
     const { clerkId, username, email, profilePhoto } = req.body;
-
+    if (!clerkId || !email || !username) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
     // Check if user already exists
     let user = await User.findOne({ username });
 

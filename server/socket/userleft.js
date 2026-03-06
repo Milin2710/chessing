@@ -29,12 +29,12 @@ export async function userLeft(
     console.log(`User ${player.username} removed from playingUsers`);
     console.log(`User ${player.opponentUsername} removed from playingUsers`);
   }
-
+  let rating = 1200;
   if (
     player &&
     player.color === "white" &&
     games.get(playerRooms.get(socket.id)) &&
-    games.get(playerRooms.get(socket.id)).moves >= 1
+    games.get(playerRooms.get(socket.id)).moves.length >= 1
   ) {
     const playerw = await User.findOne({ username: player.username });
     const playerb = await User.findOne({
@@ -56,12 +56,13 @@ export async function userLeft(
     if (playerb) {
       playerb.games.push(game._id);
       playerb.rating = (playerb.rating || 1200) + 8;
+      rating = playerb.rating;
       await playerb.save();
     }
   } else if (
     player &&
     player.color === "black" &&
-    games.get(playerRooms.get(socket.id))
+    games.get(playerRooms.get(socket.id)).moves.length >= 1
   ) {
     const playerw = await User.findOne({
       username: player.opponentUsername,
@@ -78,6 +79,7 @@ export async function userLeft(
     if (playerw) {
       playerw.games.push(game._id);
       playerw.rating = (playerw.rating || 1200) + 8;
+      rating = playerw.rating;
       await playerw.save();
     }
     if (playerb) {
@@ -89,7 +91,11 @@ export async function userLeft(
 
   const roomId = playerRooms.get(socket.id);
   if (roomId) {
-    io.to(roomId).emit("result", "Opponent left");
+    io.to(roomId).emit("result", {
+      result: "Opponent left",
+      rating: rating,
+      increment: 8,
+    });
     [...playerRooms.entries()]
       .filter(([_, r]) => r === roomId)
       .forEach(([playerId]) => playerRooms.delete(playerId));

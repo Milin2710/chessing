@@ -12,6 +12,13 @@ import PairingOverlay from "./2DChessComponents/Pairing";
 import { useTheme } from "./ThemeProvider";
 import { useUser } from "@clerk/nextjs";
 import VictoryOverlay from "./2DChessComponents/Victory";
+import GameControls from "./2DChessComponents/GameControls";
+
+interface Result {
+  result: string;
+  rating: number;
+  increment: number;
+}
 
 export default function ChessBoard2D() {
   const { theme } = useTheme();
@@ -58,7 +65,11 @@ export default function ChessBoard2D() {
     ...Array.from({ length: 16 }, (_, i) => 48 + i), // Bottom 2 rows
   ];
 
-  const [result, setResult] = useState<string | null>(null);
+  const [result, setResult] = useState<Result>({
+    result: "ERROR",
+    rating: 0,
+    increment: 0,
+  });
 
   // Stores the square index (0–63) where each piece is located
   // Index in the array = piece ID, value = square number
@@ -80,6 +91,8 @@ export default function ChessBoard2D() {
         console.log("System message:", data);
         if (data.paired) {
           setPaired(true);
+          setPieceLocations(initialPositions);
+          setHistory([initialPositions]);
           setColor(data.color || "white");
           console.log("You are paired!");
           console.log("Your color:", data.color);
@@ -115,18 +128,21 @@ export default function ChessBoard2D() {
   }, []);
 
   useEffect(() => {
-    socket.on("result", (result: string) => {
-      console.log("result:", result);
-      if (result === "Opponent left") {
-        setPaired(false);
-        setColor("white");
-        setPieceLocations(initialPositions);
-        setHistory([initialPositions]);
-        setResult("Opponent left the game");
-      } else {
-        console.log("Game result:", result);
+    socket.on(
+      "result",
+      (data: { result: string; rating: number; increment: number }) => {
+        console.log("result:", data);
+        if (data.result === "Opponent left") {
+          setPaired(false);
+          setColor("white");
+          setPieceLocations(initialPositions);
+          setHistory([initialPositions]);
+          setResult(data);
+        } else {
+          console.log("Game result:", result);
+        }
       }
-    });
+    );
 
     return () => {
       socket.off("moves");
@@ -288,7 +304,7 @@ export default function ChessBoard2D() {
       // Emit to server
       socket.emit("moves", updatedBoard);
     }
-
+    
     // Reset drag state
     setDraggingId(null);
     setFloatingPos(null);
@@ -323,119 +339,113 @@ export default function ChessBoard2D() {
   // console.log("socket", socket);
 
   return (
-    <div className="flex flex-row-reverse gap-2 items-center justify-center overflow-y-hidden">
-      <div className="gap-2 flex flex-col items-center">
-        {/* <Userinfo /> */}
-        {/* <button
-          onClick={undoMove}
-          className="px-3 py-1 bg-gray-700 text-white rounded mt-2 cursor-pointer"
+      <div className="flex flex-row-reverse gap-2 items-center justify-center overflow-y-hidden">
+        <div className="gap-2 flex flex-col items-center">
+          {!paired && <PairingOverlay />}
+        </div>
+        <div
+          onContextMenu={handleContextMenu}
+          ref={boardRef}
+          className={`relative grid grid-cols-8 grid-rows-8 ${theme}-gradient w-fit select-none place-self-center border-2 mt-2`}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
         >
-          Undo
-        </button> */}
-        {!paired && <PairingOverlay />}
+          {paired && <HandshakeAnimation />}
+          {result.rating !== 0 && (
+            <VictoryOverlay
+              result={result.result}
+              rating={result.rating}
+              increment={result.increment}
+            />
+          )}
+
+          {Array.from({ length: 64 }).map((_, i) => {
+            const row = Math.floor(i / 8);
+            const col = i % 8;
+
+            // Calculate snake-pattern index
+            const displayIndex =
+              row % 2 === 0
+                ? row * 8 + col + 1 - 65 // normal left-to-right
+                : row * 8 + (8 - col) - 65; // reversed right-to-left
+
+            const pid = pieceIdAtSquare(i);
+            //   console.log("pid", pid, "i", i, "displayIndex", displayIndex);
+            const hasPiece = pid !== -1;
+            const isDraggedHere = pid === draggingId;
+
+            return (
+              <div
+                key={i}
+                data-square={i}
+                className={`flex items-center justify-center relative ${
+                  displayIndex % 2 === 0 ? "bg-white" : "bg-transparent"
+                }`}
+                style={{ width: cellSize, height: cellSize }}
+              >
+                {hasPiece && !isDraggedHere && (
+                  <div
+                    onPointerDown={(e) => startDrag(e, pid)}
+                    draggable={false}
+                    className={`w-[100%] h-[100%] ${
+                      (color === "white" && pid < 16) ||
+                      (color === "black" && pid >= 16)
+                        ? "cursor-not-allowed"
+                        : "cursor-grab"
+                    }`}
+                  >
+                    {pid >= 8 && pid <= 15 && (
+                      <img src="./pieces/pawn-b.svg" alt="P" />
+                    )}
+                    {(pid === 0 || pid === 7) && (
+                      <img src="./pieces/rook-b.svg" alt="P" />
+                    )}
+                    {(pid === 1 || pid === 6) && (
+                      <img src="./pieces/knight-b.svg" alt="P" />
+                    )}
+                    {(pid === 2 || pid === 5) && (
+                      <img src="./pieces/bishop-b.svg" alt="P" />
+                    )}
+                    {pid === 3 && <img src="./pieces/queen-b.svg" alt="P" />}
+                    {pid === 4 && <img src="./pieces/king-b.svg" alt="P" />}
+                    {/* White Pieces */}
+                    {pid >= 16 && pid <= 23 && (
+                      <img src="./pieces/pawn-w.svg" alt="P" />
+                    )}
+                    {(pid === 24 || pid === 31) && (
+                      <img src="./pieces/rook-w.svg" alt="P" />
+                    )}
+                    {(pid === 25 || pid === 30) && (
+                      <img src="./pieces/knight-w.svg" alt="P" />
+                    )}
+                    {(pid === 26 || pid === 29) && (
+                      <img src="./pieces/bishop-w.svg" alt="P" />
+                    )}
+                    {pid === 27 && <img src="./pieces/queen-w.svg" alt="P" />}
+                    {pid === 28 && <img src="./pieces/king-w.svg" alt="P" />}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+          {/* Floating dragged piece */}
+          {draggingId !== null && floatingPos && (
+            <DraggingPiece
+              draggingId={draggingId}
+              setDraggingId={setDraggingId}
+              floatingPos={floatingPos}
+              setFloatingPos={setFloatingPos}
+              cellSize={cellSize}
+              boardRef={boardRef}
+              pieceLocations={pieceLocations}
+              setPieceLocations={setPieceLocations}
+              history={history}
+              setHistory={setHistory}
+              socket={socket}
+            />
+          )}
+        </div>
       </div>
-      <div
-        onContextMenu={handleContextMenu}
-        ref={boardRef}
-        className={`relative grid grid-cols-8 grid-rows-8 ${theme}-gradient w-fit select-none place-self-center border-2 mt-2`}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-      >
-        {/* <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center"> */}
-        {paired && <HandshakeAnimation />}
-        {result && <VictoryOverlay result={result} />}
-
-        {Array.from({ length: 64 }).map((_, i) => {
-          const row = Math.floor(i / 8);
-          const col = i % 8;
-
-          // Calculate snake-pattern index
-          const displayIndex =
-            row % 2 === 0
-              ? row * 8 + col + 1 - 65 // normal left-to-right
-              : row * 8 + (8 - col) - 65; // reversed right-to-left
-
-          const pid = pieceIdAtSquare(i);
-          //   console.log("pid", pid, "i", i, "displayIndex", displayIndex);
-          const hasPiece = pid !== -1;
-          const isDraggedHere = pid === draggingId;
-
-          return (
-            <div
-              key={i}
-              data-square={i}
-              className={`flex items-center justify-center relative ${
-                displayIndex % 2 === 0 ? "bg-white" : "bg-transparent"
-              }`}
-              style={{ width: cellSize, height: cellSize }}
-            >
-              {/* <span className="absolute">{displayIndex}</span> */}
-              {hasPiece && !isDraggedHere && (
-                <div
-                  onPointerDown={(e) => startDrag(e, pid)}
-                  draggable={false}
-                  className={`w-[100%] h-[100%] ${
-                    (color === "white" && pid < 16) ||
-                    (color === "black" && pid >= 16)
-                      ? "cursor-not-allowed"
-                      : "cursor-grab"
-                  }`}
-                >
-                  {/* <span className="absolute">{displayIndex}</span> */}
-                  {/* Black Pieces */}
-                  {pid >= 8 && pid <= 15 && (
-                    <img src="./pieces/pawn-b.svg" alt="P" />
-                  )}
-                  {(pid === 0 || pid === 7) && (
-                    <img src="./pieces/rook-b.svg" alt="P" />
-                  )}
-                  {(pid === 1 || pid === 6) && (
-                    <img src="./pieces/knight-b.svg" alt="P" />
-                  )}
-                  {(pid === 2 || pid === 5) && (
-                    <img src="./pieces/bishop-b.svg" alt="P" />
-                  )}
-                  {pid === 3 && <img src="./pieces/queen-b.svg" alt="P" />}
-                  {pid === 4 && <img src="./pieces/king-b.svg" alt="P" />}
-                  {/* White Pieces */}
-                  {pid >= 16 && pid <= 23 && (
-                    <img src="./pieces/pawn-w.svg" alt="P" />
-                  )}
-                  {(pid === 24 || pid === 31) && (
-                    <img src="./pieces/rook-w.svg" alt="P" />
-                  )}
-                  {(pid === 25 || pid === 30) && (
-                    <img src="./pieces/knight-w.svg" alt="P" />
-                  )}
-                  {(pid === 26 || pid === 29) && (
-                    <img src="./pieces/bishop-w.svg" alt="P" />
-                  )}
-                  {pid === 27 && <img src="./pieces/queen-w.svg" alt="P" />}
-                  {pid === 28 && <img src="./pieces/king-w.svg" alt="P" />}
-                  {/* <img src="./pieces/bishop-w.svg" alt="B" /> */}
-                </div>
-              )}
-            </div>
-          );
-        })}
-
-        {/* Floating dragged piece */}
-        {draggingId !== null && floatingPos && (
-          <DraggingPiece
-            draggingId={draggingId}
-            setDraggingId={setDraggingId}
-            floatingPos={floatingPos}
-            setFloatingPos={setFloatingPos}
-            cellSize={cellSize}
-            boardRef={boardRef}
-            pieceLocations={pieceLocations}
-            setPieceLocations={setPieceLocations}
-            history={history}
-            setHistory={setHistory}
-            socket={socket}
-          />
-        )}
-      </div>
-    </div>
   );
 }

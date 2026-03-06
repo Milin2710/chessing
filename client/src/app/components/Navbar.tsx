@@ -28,15 +28,18 @@ import {
 } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
 import { useTheme } from "./ThemeProvider";
+import { useUserData } from "../contexts/UserDataContext";
 
 export default function Navbar() {
   const { theme, changetheme } = useTheme();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { userData } = useUserData();
 
-  // Mock user data - replace with actual auth state
-  const isLoggedIn = true;
-  const userRating = 1247;
-  const username = "ChessPlayer";
+  if (!userData) return <p>Loading...</p>;
+
+  const isLoggedIn = userData;
+  const userRating = userData.rating;
+  const username = userData.username;
 
   const navigationItems = [
     { name: "Play", href: "/play", icon: Play },
@@ -101,9 +104,16 @@ export default function Navbar() {
                   <Trophy className="w-3 h-3 mr-1" />
                   {userRating}
                 </Badge>
-
-                {/* User Menu */}
-                <UserButton />
+                <Button
+                  variant="ghost"
+                  className="flex items-center p-2"
+                >
+                  {/* User Menu */}
+                  <UserButton />
+                  <span className="hidden sm:block font-medium cursor-default">
+                    {username}
+                  </span>
+                </Button>
               </div>
             ) : (
               <div className="flex items-center space-x-2">
