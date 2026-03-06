@@ -159,11 +159,13 @@ CLERK_API_KEY=your-clerk-key
 
 ### Run the Project
 
+Start redis server, use docker
+
 Start backend:
 
 ```bash
 cd server
-npm run dev
+nodemon server
 ```
 
 Start frontend:
