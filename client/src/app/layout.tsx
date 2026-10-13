@@ -27,7 +27,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Chessing",
+  title: "Zugzwang",
   description: "Play chess online with friends",
 };
 

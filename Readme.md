@@ -1,4 +1,4 @@
-# ♟️ Chessing — Real-Time Multiplayer Chess Platform
+# ♟️ Zugzwang – Distributed Real-Time Chess Platform
 
 A real-time multiplayer chess platform where players can join rooms, get paired with opponents, and play chess live.  
 The project focuses on **real-time game synchronization, matchmaking logic, and scalable socket infrastructure**.
@@ -13,7 +13,7 @@ The project focuses on **real-time game synchronization, matchmaking logic, and 
 
 ## ✨ Overview
 
-Chessing is a full-stack real-time application that allows players to:
+Zugzwang is a full-stack real-time application that allows players to:
 
 - Authenticate and create accounts
 - Join a matchmaking queue

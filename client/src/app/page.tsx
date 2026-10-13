@@ -146,7 +146,7 @@ export default function Home() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-10">
         <div className="text-center mt-10">
           <h1 className="text-5xl font-bold text-foreground mb-4">
-            Welcome to Chessing
+            Welcome to Zugzwang
           </h1>
           <p className="text-xl text-muted-foreground mb-8">
             Master the game of chess with millions of players worldwide
